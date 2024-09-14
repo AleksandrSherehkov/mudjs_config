@@ -32,8 +32,13 @@ var chars = {
         food_container: 'bag:food',
         weapons: {
             //weapon_main: { name: 'sting', pattern: 'короткий меч "Жало"'},
-            weapon_main: { name: 'knife', pattern: 'резак'},
-            shield: { name: 'крышка', pattern: 'крышка от мусорного бака'},
+            //weapon_main: { name: 'knife', pattern: 'резак'},
+            //weapon_main: { name: 'sap', pattern: 'мешочек ворюги'},
+            //weapon_main: { name: 'awl', pattern: 'старое шило'},
+            //weapon_main: { name: 'sword', pattern: 'жестяная сабля'},
+            weapon_main: { name: 'scalpel', pattern: 'скальпель владельца Цирка'},
+            //shield: { name: 'крышка', pattern: 'крышка от мусорного бака'},
+            shield: { name: 'shield', pattern: 'покрытый металлом щит с шипами'},
             range_throw: { name: 'dagger'},
         },
         buffs_needs: {
@@ -185,7 +190,7 @@ var hasHarp = false;
 var isHarp = false;
 var timeout = false;
 var herbCooldown = false;
-var slook = {};
+var slook = {progress:0};
 var lSlook = false;
 var counterSkill = {
     attacks: 0,
@@ -221,6 +226,13 @@ $('.trigger').on('text', function (e, text) {
     if(text.match('^[kach]')) return;
     if(text.match('^Входящие команды очищены\.$') && my_char.action.act) {
         return;
+    }
+    if(text.match('^.* наносит повреждения .*\.$')) {
+        console.log(`>>>${text}<<<`);
+    }
+    match = (/^Полночь. Начинается день (.*)\./).exec(text);
+    if(match) {
+        logWithDate(`[${mudprompt.date.d} (${match[1]}) ${mudprompt.date.m} ${mudprompt.date.y}]`);
     }
     //качаем throwing weapon
     if(kach){ 
@@ -379,8 +391,9 @@ $('.trigger').on('text', function (e, text) {
         if(text.match('(^См. также (справка|help) .*\.$)|(^Формат: .*$)')) {
             if(test) {
                 console.log("TRIGGER: slook finish detected!");
+                console.log('TRIGGER [slook result]:');console.log(slook);
             }
-            console.log('TRIGGER [slook result]:');console.log(slook);
+            logWithDate(`-->${slook.name}: ${slook.progress}%`);
             let skillName;
             if(my_char[slook.type][slook.name]==undefined)
                 skillName = slook.runame;
@@ -390,8 +403,8 @@ $('.trigger').on('text', function (e, text) {
             if(my_char[slook.type]==undefined) my_char[slook.type] = {};
             if(my_char[slook.type][skillName]==undefined) my_char[slook.type][skillName] = {};
             Object.assign(my_char[slook.type][skillName], slook);
-            console.log('my_char['+slook.type+']['+skillName+']',my_char[slook.type][skillName]);
-            slook = {};
+            //console.log('my_char['+slook.type+']['+skillName+']',my_char[slook.type][skillName]);
+            slook = {progress:0};
             lSlook = false;
         }
         return;
@@ -408,9 +421,9 @@ $('.trigger').on('text', function (e, text) {
 
     match = (/^Ты учишься на своих ошибках, и твое умение ('.*') совершенствуется.$|^Теперь ты гораздо лучше владеешь искусством ('.*')!$/).exec(text);
     if(match){
-        console.log('match',match);
+        if(test)console.log('match',match);
         let slookSkill = match[1]==undefined?match[2]:match[1];
-        echo('-->[slook '+slookSkill+']');
+        //echo('-->[slook '+slookSkill+']');
         doAct('slook', slookSkill);
         if(kach && slookSkill === "'counter'") {
             counterSkill.improves++;
@@ -674,23 +687,23 @@ $('.trigger').on('text', function (e, text) {
     //-------------------------------------------------------------------------//
     //[#weapon]
     if (text.match('ВЫБИЛ.? у тебя .*, и он.? пада.?т .*!')) {
-        console.log('MATCH:'+text+'\n');
+        //console.log('MATCH:'+text+'\n');
         if(test)console.log('[#weapon] armed:'+my_char.armed+' armed_second:'+my_char.armed_second+'\n');
 
         my_char.eqChanged = true;
         if(!my_char.armed || my_char.armed==2) {
             my_char.armed = 0;
             //if(test) 
-            console.log('[#weapon](set armed=0)\n');
+            console.log('[#weapon](set armed=0) ['+text+']');
         }
         if(my_char.armed_second==3){
             my_char.armed_second = 0;
            //if(test) 
-           console.log('[#weapon](set armed_second=0)\n');
+           console.log('[#weapon](set armed_second=0) ['+text+']');
         }
     }
     if (text.match(' ВЫБИЛ.? у тебя оружие!$')) {
-        console.log('MATCH:'+text+'\n');
+        //console.log('MATCH:'+text+'\n');
         if(test) console.log('[#weapon] armed:'+my_char.armed+' armed_second:'+my_char.armed_second+'\n');
 
         my_char.eqChanged = true;
@@ -699,15 +712,8 @@ $('.trigger').on('text', function (e, text) {
         //if(test) 
         console.log('[#weapon](set armed=1)*******NEED FIX*********\n');
     }
-    if(text.match('^Ты берешь .*\.$')) {
-        console.warn("MATCH GET", my_char);
-        if(my_char.action.act === 'get')
-            console.warn("ACT === get");
-        else
-            console.warn("ACT !== get");
-    }
     if (my_char.action.act === 'get' && text.match('^Ты берешь .*\.$')) {
-        console.log('MATCH:'+text+'\n');
+        //console.log('MATCH:'+text+'\n');
         if(test) console.log('[#weapon] armed:'+my_char.armed+' armed_second:'+my_char.armed_second+'\n');
 
         clearAction();
@@ -715,13 +721,13 @@ $('.trigger').on('text', function (e, text) {
             my_char.armed = 1;
             my_char.eqChanged = true;
             //if(test) 
-            console.log('[#weapon](set armed=1)\n');
+            console.log('[#weapon](set armed=1) ['+text+']');
         }
         if (my_char.armed_second === 0) {
             my_char.armed_second = 1;
             my_char.eqChanged = true;
             //if(test) 
-            console.log('[#weapon](set armed_second=1)\n');
+            console.log('[#weapon](set armed_second=1) ['+text+']');
         }
     }
     match = (/^От боли ты роняешь (.*)!$/).exec(text);
@@ -735,15 +741,16 @@ $('.trigger').on('text', function (e, text) {
         } else if(my_char.weapon?.pattern 
             && match[1].match(my_char.weapon.pattern)) {
             my_char.armed = 0;
-            console.log('[#weapon](set armed=0)\n');
+            console.log('[#weapon](set armed=0) ['+text+']');
             return;
         } else if(my_char.second?.pattern 
             && match[1].match(my_char.second.pattern)) {
             my_char.armed_second = 0;
-            console.log('[#weapon](set armed_second=0)\n');
+            console.log('[#weapon](set armed_second=0) ['+text+']');
             return;
         } 
         echo('<span style="color:red;">*******УРОНЕННОЕ НЕ ОБРАБОТАНО*********</span>');
+        console.warn(`НЕ ОТРАБОТАЛО УРОНЕННОЕ: [${text}]`);
     }
     //[#shield]
     if (text.match('^.* превращается в труху и опилки.$')
@@ -758,13 +765,13 @@ $('.trigger').on('text', function (e, text) {
 
     match = (/^Ты вооружаешься .*?(?<main> как основным оружием)?(?<second> как вторичным оружием)?\.$/).exec(text);
     if (match) {
-        console.log('MATCH:'+text+'\n');
+        //console.log('MATCH:'+text+'\n');
         if(test) console.log('[#weapon] armed:'+my_char.armed+' armed_second:'+my_char.armed_second+'\n');
 
         if(match.groups && match.groups.main) {
             my_char.armed_second = 3;
             //if(test) 
-            console.log('[#weapon](set armed_second=3)\n');
+            console.log('[#weapon](set armed_second=3) ['+text+']');
             return;
         }
         if(match.groups && match.groups.second
@@ -772,7 +779,7 @@ $('.trigger').on('text', function (e, text) {
             clearAction();
             my_char.armed_second = 2;
             //if(test) 
-            console.log('[#weapon](set armed_second=2)\n');
+            console.log('[#weapon](set armed_second=2) ['+text+']');
             return;
         }
 
@@ -780,11 +787,11 @@ $('.trigger').on('text', function (e, text) {
         clearAction("wield");
         my_char.armed = 2;
         //if(test) 
-        console.log('[#weapon](set armed=2)\n');
+        console.log('[#weapon](set armed=2) ['+text+']');
         if(my_char.armed_second!==false && my_char.armed_second===3) {
             my_char.armed_second=1;
             //if(test) 
-            console.log('[#weapon](set armed=1)\n');
+            console.log('[#weapon](set armed=1) ['+text+']');
             my_char.eqChanged = true;
         }
     }
@@ -802,21 +809,21 @@ $('.trigger').on('text', function (e, text) {
     }
     match = (/^Ты снимаешь .*\.$/).exec(text);
     if(match && my_char.action.act === 'remove') {
-        console.log("MATCH: remove:"+text, my_char.action);
+        //console.log("MATCH: remove:"+text, my_char.action);
         if(my_char.action.command === my_char.weapon.name) {
-            console.log('[#weapon_change][set armed = 1]');
+            console.log('[#weapon_change][set armed = 1] ['+text+']');
             my_char.armed = 1;
             my_char.eqChanged = true;
         }
 
         if(my_char.action.command === my_char.second.name) {
-            console.log('[#weapon_change][set armed_second = 1]');
+            console.log('[#weapon_change][set armed_second = 1] ['+text+']');
             my_char.armed_second=1;
             my_char.eqChanged = true;
         }
 
         if(my_char.action.command === 'quiver') {
-            console.log('[#weapon_change][set quiver = false]');
+            console.log('[#weapon_change][set quiver = false] ['+text+']');
             my_char.quiver=false;
             my_char.eqChanged = true;
         }
@@ -829,7 +836,7 @@ $('.trigger').on('text', function (e, text) {
      if(text.match('Ты берешь в руки колчан.')) {
         console.log("MATCH:"+text, my_char.action);
         my_char.quiver = true;
-        console.log('[#weapon_change][set quiver = true]');
+        console.log('[#weapon_change][set quiver = true] ['+text+']');
         if(my_char.action.act === 'wear' && my_char.action.command==='quiver') {
             my_char.eqChanged = true;
             clearAction();
@@ -1008,16 +1015,20 @@ $('.trigger').on('text', function (e, text) {
     // к стандартным уведомлениям добавлен хрустальный шар и поздравлялки. Убраны уведомления от некоторых мобов. [#говоруны]
     if (!text.match('^Валькирия |^Русалка |^The Ofcol cityguard |^Стражник |^Водяной |^The weaponsmith |^Архивариус |^Мальчик |^Булочник |^Колдун |^Ювелир |^Хассан |^Охранник султана |^Продавец доспехов |^Оружейник |^Бакалейщик ')
         && (
-            text.match('^\\[ic\\] ') ||
-            text.match('^\\[ooc\\] ') ||
+            //text.match('^\\[ic\\] ') ||
+            //text.match('^\\[ooc\\] ') ||
             text.match(' говорит тебе \'.*\'$') ||
-            text.match(' произносит \'.*\'$') ||
-            text.match('^\\[RULER\\].*$') ||
-            text.match('^\\Тихий голос из хрустального шара:\\ .*$') ||
-            text.match('\\ поздравляет \'.*\'$')
+            text.match(' произносит \'.*\'$') // ||
+            //text.match('^\\[RULER\\].*$') ||
+            //text.match('^\\Тихий голос из хрустального шара:\\ .*$') ||
+            //text.match('\\ поздравляет \'.*\'$')
         )
     ) {
-        notify(text);
+        //notify(text);
+        logWithDate(text);
+    }
+    if(text.match('^Ты говоришь .* \'.*\'$') || text.match('^Ты произносишь \'.*\'$')){
+        logWithDate(text);
     }
 
 });
@@ -1506,7 +1517,7 @@ keydown = function (e) {
 };
 
 function charInit() {
-    if(test) console.log(' -->charInit()');
+    if(test) console.log('charInit()');
 
     kach = false;
 
@@ -1519,7 +1530,7 @@ function charInit() {
     } else {
         if(test) console.log(' -->chars[' + char_obj.sees + '] == undefined');
     }
-    if (test) console.log(' -->charInit().my_char', my_char);
+    console.log(`charInit(): `, my_char.name);
 }
 
 function getChar() {
@@ -1936,11 +1947,11 @@ function checkKach() {
         doAct('visible');
         return result;
     }
-    
+
     if(!fight && !checkPose('rest')) return result;
 
     //haggle
-    if(my_char.hasSkill("haggle")&&my_char.skills['haggle'].proggress!==100) {
+    if(my_char.hasSkill("haggle") && my_char.skills['haggle'].progress!==100) {
         haggleSkill.room = {};
         for(let room of haggleSkill.rooms) {
             if(mudprompt.vnum==room.vnum) {
@@ -3150,6 +3161,8 @@ function getSkills(char, level) {
 
     if(char.class=== 'thief') {
         askills.push(['dodge', 1]);
+        askills.push(['shield block', 7]);
+        askills.push(['hand to hand', 1]);
         askills.push(['dagger', 1]);
         askills.push(['sword', 1]);
         askills.push(['detect hide', 5]);
@@ -3839,9 +3852,21 @@ function Words(name, str) {
         }
     };
 };
+function logWithDate(str) {
+    let date = new Date();
+    console.log(`${date.toLocaleString()} ${str}`);
+};
 /****************SKILLS FOR KACH **************/
 var skills = {
+    haggle: {
+        act: null,
+        pos: "rest",
+    },
     dodge: {
+        act: null,
+        pos: "fight",
+    },
+    'shield block': {
         act: null,
         pos: "fight",
     },
@@ -3849,7 +3874,15 @@ var skills = {
         act: null,
         pos: "fight",
     },
+    "hand to hand": {
+        act: null,
+        pos: "fight",
+    },
     sword: {
+        act: null,
+        pos: "fight",
+    },
+    mace: {
         act: null,
         pos: "fight",
     },
