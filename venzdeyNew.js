@@ -5,6 +5,8 @@
  */
 
 (() => {
+  console.log(mudprompt);
+
   /*--------------------------------------------------------------------------
    * Триггеры - автоматические действия в ответ на определенные строки в игре.
    *-------------------------------------------------------------------------*/
@@ -303,9 +305,7 @@
     }
   };
 
-  // Обработчик нажатия клавиш
-  $(document).off('keydown.myNamespace');
-  $(document).on('keydown.myNamespace', e => {
+  const handleMovement = e => {
     switch (e.which) {
       case KeyCodes.KP_1:
         dir('down', e);
@@ -328,60 +328,60 @@
       case KeyCodes.KP_9:
         dir('up', e);
         break;
-      case 27: // Клавиша Escape
+      default:
+        return false;
+    }
+    return true;
+  };
+
+  const buffs = [
+    { prop: 'det', value: 'i', command: 'c detect invis' },
+    { prop: 'pro', value: 'S', command: 'c shield' },
+    { prop: 'enh', value: 'l', command: 'c learning' },
+    { prop: 'enh', value: 'g', command: 'c giant' },
+    { prop: 'pro', value: 'p', command: "c 'prot shield'" },
+    { prop: 'det', value: 'm', command: 'c detect magic' },
+    { prop: 'enh', value: 'h', command: 'c haste' },
+    { prop: 'trv', value: 'm', command: 'c mental block' },
+    { prop: 'pro', value: 'k', command: 'c stone skin' },
+    { prop: 'pro', value: 'z', command: 'c stardust' },
+    { prop: 'det', value: 'w', command: 'c improved detect' },
+    { prop: 'pro', value: 'D', command: 'c dragon skin' },
+    { prop: 'pro', value: 'h', command: 'c protection heat' },
+    { prop: 'pro', value: 'a', command: 'c armor' },
+    { prop: 'pro', value: 'A', command: 'c enhanced armor' },
+    { prop: 'enh', value: 'm', command: 'c magic concentrate' },
+    { prop: 'pro', value: 'm', command: 'c spell resistance' },
+    { prop: 'enh', value: 'c', command: 'c inaction' },
+    { prop: 'pro', value: 'l', command: 'c love potion' },
+    { prop: 'pro', value: 'a', command: 'c astral projection' },
+    { prop: 'pro', value: 'b', command: 'c broom ritual' },
+  ];
+
+  const handleBuffs = () => {
+    buffs.forEach(buff => {
+      const { prop, value, command } = buff;
+      if (mudprompt[prop] === 'none' || !mudprompt[prop].a.includes(value)) {
+        send(command);
+      }
+    });
+  };
+
+  // Обработчик нажатия клавиш
+  $(document).off('keydown.myNamespace');
+  $(document).on('keydown.myNamespace', e => {
+    if (handleMovement(e)) return;
+
+    switch (e.which) {
+      case 27: // Escape
         if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
           $('#input input').val(''); // Очистить поле ввода
         }
         break;
-      case 192: // Клавиша тильда (`), часто используется для баффов
-        // Предполагается, что mudprompt определен в глобальной области
-        if (mudprompt.det === 'none' || !mudprompt.det.a.includes('i'))
-          send('c detect invis');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('S'))
-          send('c shield');
-        if (mudprompt.enh === 'none' || !mudprompt.enh.a.includes('l'))
-          send('c learning');
-        if (mudprompt.enh === 'none' || !mudprompt.enh.a.includes('g'))
-          send('c giant');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('p'))
-          send("c 'prot shield'");
-        if (mudprompt.det === 'none' || !mudprompt.det.a.includes('m'))
-          send('c detect magic');
-        if (mudprompt.enh === 'none' || !mudprompt.enh.a.includes('h'))
-          send('c haste');
-        if (mudprompt.trv === 'none' || !mudprompt.trv.a.includes('m'))
-          send('c mental block');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('k'))
-          send('c stone skin');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('z'))
-          send('c stardust');
-        if (mudprompt.det === 'none' || !mudprompt.det.a.includes('w'))
-          send('c improved detect');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('D'))
-          send('c dragon skin');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('h'))
-          send('c protection heat');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('a'))
-          send('c armor');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('A'))
-          send('c enhanced armor');
-        if (mudprompt.enh === 'none' || !mudprompt.enh.a.includes('m'))
-          send('c magic concentrate');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('m'))
-          send('c spell resistance');
-
-        // Не найдено
-        if (mudprompt.enh === 'none' || !mudprompt.enh.a.includes('c'))
-          send('c inaction');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('l'))
-          send('c love potion');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('a'))
-          send('c astral projection');
-        if (mudprompt.pro === 'none' || !mudprompt.pro.a.includes('b'))
-          send('c broom ritual');
-
+      case 192: // Tilda для баффов
+        handleBuffs();
         break;
-      case 18: // Клавиша Alt
+      case 18: // Alt
         send('к гиг д');
         send('к ускор д');
         send('к зв д');
@@ -403,11 +403,11 @@
         state.skillCount = 0; // Сбрасываем счетчик навыка
         console.log('Цикл остановлен при нажатии минуса');
         break;
-      case 36: // Клавиша Home
+      case 36: // Home
         send('взять снад сумка:лечение');
         send('осуш снад');
         break;
-      case 35: // Клавиша End
+      case 35: // End
         send('взять один сумка:лечение');
         send('надеть один');
         send('к леч');
