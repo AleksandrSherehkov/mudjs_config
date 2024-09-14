@@ -7,37 +7,41 @@
 /*--------------------------------------------------------------------------
  * Триггера - автоматические действия как реакция на какую-то строку в мире.
  *-------------------------------------------------------------------------*/
-$('.trigger').on('text', function(e, text) {
-    if (text.match('ВЫБИЛ.? у тебя оружие, и оно упало на землю!$')) {
-//        echo('>>> Подбираю оружие с пола, очистив буфер команд.\n');
-//        send('\\');
-//        send('взять ' + weapon + '|надеть ' + weapon);
-    }
+$('.trigger').on('text', function (e, text) {
+  if (text.match('ВЫБИЛ.? у тебя оружие, и оно упало на землю!$')) {
+    //        echo('>>> Подбираю оружие с пола, очистив буфер команд.\n');
+    //        send('\\');
+    //        send('взять ' + weapon + '|надеть ' + weapon);
+  }
 
-    if (text.match('^Ты умираешь от голода|^Ты умираешь от жажды')) {
-        if (mudprompt.p2.pos === 'stand' || mudprompt.p2.pos === 'sit' || mudprompt.p2.pos === 'rest') {
-//        echo('>>> Правильно питаюсь, когда не сплю и не сражаюсь.\n');
-//        send('взять бочон сумка');
-//        send('пить боч|пить боч|пить боч');
-//        send('положить боч сумка');
-        }
-    }
-
-    if (text.match('Обессилев, ты падаешь лицом вниз!')) {
-//        echo('>>> ЕЩЕ РАЗОК!!!\n');
-//        send('встать|выбить ' + doorToBash);
-    }
-
+  if (text.match('^Ты умираешь от голода|^Ты умираешь от жажды')) {
     if (
-        (text.match('^\\[ic\\] ') ||
-        text.match('^\\[ooc\\] ') ||
-        text.match(' говорит тебе \'.*\'$') ||
-        text.match(' произносит \'.*\'$'))
-        && !text.match('^Стражник|^Охранник'))
-    {
-        // Всплывающие оповещения для важных сообщений.
-        notify(text);
+      mudprompt.p2.pos === 'stand' ||
+      mudprompt.p2.pos === 'sit' ||
+      mudprompt.p2.pos === 'rest'
+    ) {
+      //        echo('>>> Правильно питаюсь, когда не сплю и не сражаюсь.\n');
+      //        send('взять бочон сумка');
+      //        send('пить боч|пить боч|пить боч');
+      //        send('положить боч сумка');
     }
+  }
+
+  if (text.match('Обессилев, ты падаешь лицом вниз!')) {
+    //        echo('>>> ЕЩЕ РАЗОК!!!\n');
+    //        send('встать|выбить ' + doorToBash);
+  }
+
+  if (
+    (text.match('^\\[ic\\] ') ||
+      text.match('^\\[ooc\\] ') ||
+      text.match(" говорит тебе '.*'$") ||
+      text.match(" произносит '.*'$")) &&
+    !text.match('^Стражник|^Охранник')
+  ) {
+    // Всплывающие оповещения для важных сообщений.
+    notify(text);
+  }
 });
 
 /*----------------------------------------------------------------------------
@@ -54,139 +58,137 @@ var weapon = 'dagger';
 
 // Вспомогательная функция для выполнения команды с аргументами.
 function command(e, cmd, text, handler) {
-    var match, re;
-   
-   	// Попытаться распознать команду в формате 'cmd' или 'cmd аргумент'
-    re = new RegExp('^' + cmd + ' *(.*)');
-    match = re.exec(text);
-    if (!match)
-       return false;
-	
-	// Нашли соответствие. Аргументы передаем в параметры функции-обработчика команды.
-    handler(match);
-    e.stopPropagation(); // команда обработана локально - не отправлять на сервер
+  var match, re;
+
+  // Попытаться распознать команду в формате 'cmd' или 'cmd аргумент'
+  re = new RegExp('^' + cmd + ' *(.*)');
+  match = re.exec(text);
+  if (!match) return false;
+
+  // Нашли соответствие. Аргументы передаем в параметры функции-обработчика команды.
+  handler(match);
+  e.stopPropagation(); // команда обработана локально - не отправлять на сервер
 }
 
 // Примеры алиасов.
-$('.trigger').on('input', function(e, text) {
-    // Установить жертву для выстрелов, например: /victim hassan
-    command(e, '/victim', text, function(args) {
-        victim = args[1];
-        echo('>>> Твоя мишень теперь ' + victim + "\n");
-    });
-    
-    // Установить оружие (см. тригер выше), например: /weapon меч
-    command(e, '/weapon', text, function(args) {
-        weapon = args[1];
-        echo('>>> Твое оружие теперь ' + weapon + "\n");
-    });
-    
-    // Опознать вещь из сумки, например: /iden кольцо
-    command(e, '/iden', text, function(args) {
-        send('взять ' + args[1] + ' сумка');
-        send('к опознание ' + args[1]);
-        send('полож ' + args[1] + ' сумка');
-    });
+$('.trigger').on('input', function (e, text) {
+  // Установить жертву для выстрелов, например: /victim hassan
+  command(e, '/victim', text, function (args) {
+    victim = args[1];
+    echo('>>> Твоя мишень теперь ' + victim + '\n');
+  });
 
-    // Выбросить и уничтожить вещь из сумки: /purge барахло
-    command(e, '/purge', text, function(args) {
-        send('взять ' + args[1] + ' сумка');
-        send('бросить ' + args[1]);
-        send('жертвовать ' + args[1]);
-    });
-   
-    // Начать выбивать двери (см. тригер выше): /bd юг
-    command(e, '/bd', text, function(args) {
-        doorToBash = args[1];
-        echo('>>> Поехали, вышибаем по направлению ' + doorToBash + '\n');
-        send('выбить ' + doorToBash);
-    });
+  // Установить оружие (см. тригер выше), например: /weapon меч
+  command(e, '/weapon', text, function (args) {
+    weapon = args[1];
+    echo('>>> Твое оружие теперь ' + weapon + '\n');
+  });
+
+  // Опознать вещь из сумки, например: /iden кольцо
+  command(e, '/iden', text, function (args) {
+    send('взять ' + args[1] + ' сумка');
+    send('к опознание ' + args[1]);
+    send('полож ' + args[1] + ' сумка');
+  });
+
+  // Выбросить и уничтожить вещь из сумки: /purge барахло
+  command(e, '/purge', text, function (args) {
+    send('взять ' + args[1] + ' сумка');
+    send('бросить ' + args[1]);
+    send('жертвовать ' + args[1]);
+  });
+
+  // Начать выбивать двери (см. тригер выше): /bd юг
+  command(e, '/bd', text, function (args) {
+    doorToBash = args[1];
+    echo('>>> Поехали, вышибаем по направлению ' + doorToBash + '\n');
+    send('выбить ' + doorToBash);
+  });
 });
 
-
 /*------------------------------------------------------------------------------
- * Горячие клавиши - по умолчанию умеет ходить/стрелять/всматриваться через кейпад. 
+ * Горячие клавиши - по умолчанию умеет ходить/стрелять/всматриваться через кейпад.
  *------------------------------------------------------------------------------*/
 
 // Вспомогательные функции для горячих клавиш.
 function go(where) {
-    send(where);
+  send(where);
 }
 
 function scan(where) {
-    send('scan ' + where);
+  send('scan ' + where);
 }
 
-// Рейнджеры могут стрелять по жертве victim из лука, а маги и клеры - 
+// Рейнджеры могут стрелять по жертве victim из лука, а маги и клеры -
 // бить заклинаниями в соседнюю комнату.
 function shoot(where) {
-//    send('стрелять ' + where + ' ' + victim); 
-//    send("к 'стен лезв' " + where + '.' + victim);
-//    send("к 'струя кисл' " + where + '.' + victim);
+  //    send('стрелять ' + where + ' ' + victim);
+  //    send("к 'стен лезв' " + where + '.' + victim);
+  //    send("к 'струя кисл' " + where + '.' + victim);
 }
 
 // Коды клавиш на кейпаде.
 var KP_0 = 96,
-    KP_1 = 97,
-    KP_2 = 98,
-    KP_3 = 99,
-    KP_4 = 100,
-    KP_5 = 101,
-    KP_6 = 102,
-    KP_7 = 103,
-    KP_8 = 104,
-    KP_9 = 105,
-    KP_MUL = 106,
-    KP_PLUS = 107,
-    KP_MINUS = 109,
-    KP_DOT = 110,
-    KP_DIV = 111;
+  KP_1 = 97,
+  KP_2 = 98,
+  KP_3 = 99,
+  KP_4 = 100,
+  KP_5 = 101,
+  KP_6 = 102,
+  KP_7 = 103,
+  KP_8 = 104,
+  KP_9 = 105,
+  KP_MUL = 106,
+  KP_PLUS = 107,
+  KP_MINUS = 109,
+  KP_DOT = 110,
+  KP_DIV = 111;
 
 // Просто клавиша - идти по направлению, ctrl+клавиша - стрелять, alt+клавиша - всмотреться.
 function dir(d, e) {
-    if(e.ctrlKey) {
-        shoot(d);
-    } else if(e.altKey) {
-        scan(d);
-    } else {
-        go(d);
-    }
+  if (e.ctrlKey) {
+    shoot(d);
+  } else if (e.altKey) {
+    scan(d);
+  } else {
+    go(d);
+  }
 }
 
 // Назначаем горячие клавиши и их действия.
-keydown=function(e) {
-    switch(e.which) {
-        case KP_1:
-            dir('down', e);
-            break;
-        case KP_2:
-            dir('south', e);
-            break;
-        case KP_4:
-            dir('west', e);
-            break;
-        case KP_5:
-            send('scan');
-            break;
-        case KP_6:
-            dir('east', e);
-            break;
-        case KP_8:
-            dir('north', e);
-            break;
-        case KP_9:
-            dir('up', e);
-            break;
-            
-        case 27: // escape
-            if(!e.shiftKey && !e.ctrlKey && !e.altKey) {
-                $('#input input').val(''); // очистить поле воода
-            } else {
-                return;
-            }
-            break;
-            
-/*
+keydown = function (e) {
+  switch (e.which) {
+    case KP_1:
+      dir('down', e);
+      break;
+    case KP_2:
+      dir('south', e);
+      break;
+    case KP_4:
+      dir('west', e);
+      break;
+    case KP_5:
+      send('scan');
+      break;
+    case KP_6:
+      dir('east', e);
+      break;
+    case KP_8:
+      dir('north', e);
+      break;
+    case KP_9:
+      dir('up', e);
+      break;
+
+    case 27: // escape
+      if (!e.shiftKey && !e.ctrlKey && !e.altKey) {
+        $('#input input').val(''); // очистить поле воода
+      } else {
+        return;
+      }
+      break;
+
+    /*
         case 192: // tilde.
             // Пример автобаффа: проверяем какие аффекты отсутствуют и вешаем их.
             if (mudprompt.enh === 'none' || mudprompt.enh.a.indexOf("l") == -1)
@@ -205,7 +207,7 @@ keydown=function(e) {
             break;
 */
 
-/*
+    /*
         case KP_0:
             break;
         case KP_2:
@@ -236,10 +238,9 @@ keydown=function(e) {
        // Для кодов остальных клавиш смотри https://keycode.info 
 */
 
-        default: 
-            return; // по умолчанию просто посылаем клавишу на сервер
-    }
-    
-    e.preventDefault(); // не посылать клавишу на сервер если обработана выше
-};
+    default:
+      return; // по умолчанию просто посылаем клавишу на сервер
+  }
 
+  e.preventDefault(); // не посылать клавишу на сервер если обработана выше
+};
