@@ -192,7 +192,7 @@
   $('.trigger').off('text.myNamespace');
 
   $('.trigger').on('text.myNamespace', (e, text) => {
-    logDebug(`Полученный текст: ${text}`);
+    // logDebug(`Полученный текст: ${text}`);
 
     if (state.isHunting) {
       handleHuntingState(text);
