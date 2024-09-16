@@ -233,6 +233,14 @@
     }
   };
 
+  const handleTrainingState = text => {
+    if (text.includes('У тебя не хватает энергии')) {
+      handleLowEnergy(); // Вызываем правильную функцию триггера
+    } else if (state.isStarPressed && !state.isMasteryAchieved) {
+      checkMasteryAndRepeat(text); // Проверяем, достигнуто ли мастерство
+    }
+  };
+
   // Обработка текстовых триггеров
   $('.trigger').off('text.myNamespace');
   $('.trigger').on('text.myNamespace', (e, text) => {
