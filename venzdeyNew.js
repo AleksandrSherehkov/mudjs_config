@@ -168,9 +168,8 @@
           sendCommand(`бег ${locationCode}`);
 
           state.isInspecting = true;
-          // Добавляем задержку, чтобы дождаться результата команды "смотр"
-          sendCommand('смотр');
           state.isLocationCodeFound = true;
+          sendCommand('смотр');
         } else {
           console.log(
             'Код местности не найден; после местоположения только пробелы.'
@@ -190,7 +189,7 @@
 
     if (text.toLowerCase().includes(state.victim.toLowerCase())) {
       console.log(`>>> Жертва ${state.victim} тут!`);
-      if (text.toLowerCase().includes('уносится прочь')) {
+      if (text.toLowerCase().includes('сбегает')) {
         console.log('>>> Жертва пытается сбежать, продолжаем преследование...');
         sendCommand(`где ${state.victim}`); // Повторный поиск жертвы
       } else {
