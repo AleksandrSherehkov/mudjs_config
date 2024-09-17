@@ -5,8 +5,6 @@
  */
 
 (() => {
-  console.log(mudprompt);
-
   /*--------------------------------------------------------------------------
    * Триггеры - автоматические действия в ответ на определенные строки в игре.
    *-------------------------------------------------------------------------*/
@@ -18,8 +16,8 @@
     meltCounter: 0, // Противодействие автовыкидыванию
     lastCast: '',
     doorToBash: 'n',
-    weapon: 'whip',
-    victim: 'нимфа',
+    weapon: 'blue',
+    victim: 'проповедник',
     victimLocation: '', // Местоположение жертвы
     isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
     isLocationCodeFound: false, // Флаг, что код местности найден
@@ -27,13 +25,16 @@
     isEnergyLow: false, // Флаг для отслеживания низкого уровня энергии
     isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
     isStarPressed: false, // Флаг для отслеживания нажатия *
-    skillToTrain: 'к кам кож',
+    skillToTrain: 'к отпор зак',
     skillCount: 0, // Счетчик выполнения навыка
     maxSkillCount: 98, // Максимальное количество повторений
     isTraining: false, // Переменная для отслеживания процесса обучения
     isHunting: false, // Флаг для отслеживания процесса охоты
     isActionLocked: false, // Для предотвращения спама действий
     isInspecting: false, // Устанавливаем флаг наблюдения
+    isVictimKilled: false, // Флаг, указывающий, что жертва убита
+    isInCombat: false, // Флаг для отслеживания состояния боя
+    isLooting: false, // Флаг для отслеживания процесса лутания
   };
 
   const logDebug = message => {
@@ -137,6 +138,7 @@
 
   // Функция для поиска местоположения жертвы
   const findVictimLocation = text => {
+    console.log(`text:`, text);
     if (state.isVictimLocationFound) return; // Пропускаем, если местоположение уже найдено
 
     if (text.toLowerCase().includes(state.victim.toLowerCase())) {
@@ -185,21 +187,43 @@
 
   // Функция для обработки встречи с жертвой
   const handleVictimEncounter = text => {
-    console.log(`text3:`, text);
+    console.log(`Получено сообщение:`, text);
 
-    if (text.toLowerCase().includes(state.victim.toLowerCase())) {
+    if (text.toLowerCase().includes(`${state.victim.toLowerCase()} уже труп`)) {
+      console.log(`>>> Жертва ${state.victim} мертва! Останавливаем охоту.`);
+      state.isHunting = false;
+      state.isInspecting = false;
+      state.isVictimKilled = true;
+      state.isInCombat = false;
+      sendCommand('смотр');
+    } else if (text.toLowerCase().includes(state.victim.toLowerCase())) {
       console.log(`>>> Жертва ${state.victim} тут!`);
       if (text.toLowerCase().includes('сбегает')) {
         console.log('>>> Жертва пытается сбежать, продолжаем преследование...');
-        sendCommand(`где ${state.victim}`); // Повторный поиск жертвы
+        sendCommand(`где ${state.victim}`);
       } else {
         console.log(`>>> Атакую жертву: ${state.victim}`);
-        sendCommand(`к вол ${state.victim}`);
+        delayedSendCommand(`к вол ${state.victim}`, 1500);
+        state.isInspecting = false;
+        state.isInCombat = true;
+        setTimeout(() => {
+          continueAttacking();
+        }, 2000);
       }
     } else {
       console.log('>>> Жертва не найдена на текущей локации.');
       state.isInspecting = false;
     }
+  };
+
+  const continueAttacking = () => {
+    if (!state.isInCombat) return;
+
+    sendCommand(`к вол ${state.victim}`);
+
+    setTimeout(() => {
+      continueAttacking();
+    }, 2000);
   };
 
   const handleHuntingState = text => {
@@ -258,6 +282,25 @@
       if (regex.test(text)) {
         action();
         break; // Останавливаемся после первого совпадения
+      }
+    }
+
+    // Добавляем проверку состояния боя
+    if (state.isInCombat) {
+      if (
+        text.toLowerCase().includes(`${state.victim.toLowerCase()} уже труп`)
+      ) {
+        console.log(`>>> Жертва ${state.victim} мертва!`);
+        state.isInCombat = false; // Останавливаем атаку
+      } else if (text.toLowerCase().includes('ты не видишь здесь такого')) {
+        console.log('>>> Жертва недоступна для атаки.');
+        state.isInCombat = false; // Останавливаем атаку
+      } else if (text.toLowerCase().includes('вы не можете сражаться')) {
+        console.log('>>> Вы не можете продолжать бой.');
+        state.isInCombat = false; // Останавливаем атаку
+      } else if (text.toLowerCase().includes('вы умерли')) {
+        console.log('>>> Вы погибли.');
+        state.isInCombat = false; // Останавливаем атаку
       }
     }
   });
