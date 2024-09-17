@@ -11,31 +11,42 @@
 
   const DEBUG_MODE = true; // true - для вывода отладочной информации
 
-  // Переменные состояния игры
+  // Переменные состояния игры, сгруппированные по категориям
   const state = {
-    meltCounter: 0, // Противодействие автовыкидыванию
-    lastCast: '',
-    doorToBash: 'n',
-    weapon: 'blue',
-    victim: 'проповедник',
-    victimLocation: '', // Местоположение жертвы
-    isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
-    isLocationCodeFound: false, // Флаг, что код местности найден
-    locationCode: '', // Код местности
-    isEnergyLow: false, // Флаг для отслеживания низкого уровня энергии
-    isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
-    isStarPressed: false, // Флаг для отслеживания нажатия *
-    skillToTrain: 'к отпор зак',
-    skillCount: 0, // Счетчик выполнения навыка
-    maxSkillCount: 98, // Максимальное количество повторений
-    isTraining: false, // Переменная для отслеживания процесса обучения
-    isHunting: false, // Флаг для отслеживания процесса охоты
-    isActionLocked: false, // Для предотвращения спама действий
-    isInspecting: false, // Устанавливаем флаг наблюдения
-    isVictimKilled: false, // Флаг, указывающий, что жертва убита
-    isInCombat: false, // Флаг для отслеживания состояния боя
-    isLooting: false, // Флаг для отслеживания процесса лутания
+    hunting: {
+      isActive: false, // Флаг для отслеживания процесса охоты
+      victim: 'проповедник',
+      victimLocation: '', // Местоположение жертвы
+      isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
+      isLocationCodeFound: false, // Флаг, что код местности найден
+      locationCode: '', // Код местности
+      isInspecting: false, // Флаг наблюдения
+      isVictimKilled: false, // Флаг, указывающий, что жертва убита
+      isInCombat: false, // Флаг для отслеживания состояния боя
+    },
+    training: {
+      isActive: false, // Переменная для отслеживания процесса обучения
+      skillToTrain: 'к отпор зак',
+      skillCount: 0, // Счетчик выполнения навыка
+      maxSkillCount: 98, // Максимальное количество повторений
+      isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
+      isStarPressed: false, // Флаг для отслеживания нажатия *
+    },
+    energy: {
+      isLow: false, // Флаг для отслеживания низкого уровня энергии
+    },
+    general: {
+      meltCounter: 0, // Противодействие автовыкидыванию
+      lastCast: '',
+      doorToBash: 'n',
+      weapon: 'blue',
+      isActionLocked: false, // Для предотвращения спама действий
+      isLooting: false, // Флаг для отслеживания процесса лутания
+    },
   };
+
+  // Деструктуризация state для удобства доступа
+  const { hunting, training, energy, general } = state;
 
   const logDebug = message => {
     if (DEBUG_MODE) {
@@ -50,21 +61,18 @@
   };
 
   // Универсальная функция для отправки команды с задержкой
-  const delayedSendCommand = async (command, delay) => {
+  const delayedSendCommand = (command, delay) => {
     logDebug(`Delaying command: ${command} for ${delay}ms`);
-    try {
-      await new Promise(resolve => setTimeout(resolve, delay));
+    setTimeout(() => {
       sendCommand(command);
-    } catch (error) {
-      console.error('Error in delayed command:', error);
-    }
+    }, delay);
   };
 
   const triggers = {
     'ВЫБИЛ.? у тебя .*, и он.? пада.?т .*!': () => {
       console.log('>>> Подбираю оружие с пола, очищаю буфер команд.\n');
       sendCommand('\\');
-      sendCommand(`взять ${state.weapon}|надеть ${state.weapon}`);
+      sendCommand(`взять ${general.weapon}|надеть ${general.weapon}`);
     },
     'Ты хочешь есть.': () => {
       console.log('>>> Сейчас бы шашлычка...\n');
@@ -81,57 +89,57 @@
 
   const handleLowEnergy = () => {
     console.log('>>> Энергии не хватает, засыпаю...\n');
-    state.skillCount = 0;
-    state.isStarPressed = false; // Немедленно останавливаем цикл
-    state.isEnergyLow = true; // Устанавливаем флаг низкой энергии
+    training.skillCount = 0;
+    training.isStarPressed = false; // Немедленно останавливаем цикл
+    energy.isLow = true; // Устанавливаем флаг низкой энергии
     sendCommand('\\'); // Очищаем буфер команд
     sendCommand('спать рай');
 
     delayedSendCommand('вст', 25000); // Через 25 секунд встаем
 
     setTimeout(() => {
-      state.isStarPressed = true; // Снова запускаем цикл
-      state.isEnergyLow = false; // Сбрасываем флаг низкой энергии
-      sendCommand(state.skillToTrain); // Повторно вызываем команду
+      training.isStarPressed = true; // Снова запускаем цикл
+      energy.isLow = false; // Сбрасываем флаг низкой энергии
+      sendCommand(training.skillToTrain); // Повторно вызываем команду
       checkMasteryAndRepeat(''); // Возобновляем проверку мастерства
     }, 26000); // Задержка после отдыха
   };
 
   // Проверка на "мастерски владеешь" и запуск цикла повторения до выполнения
   const checkMasteryAndRepeat = text => {
-    if (state.isActionLocked) return; // Не увеличиваем счетчик, если действие заблокировано
+    if (general.isActionLocked) return; // Не увеличиваем счетчик, если действие заблокировано
     logDebug(`Функция checkMasteryAndRepeat вызвана с текстом: ${text}`);
 
-    if (!state.isStarPressed) return; // Не выполнять цикл, если * не нажата
+    if (!training.isStarPressed) return; // Не выполнять цикл, если * не нажата
 
     if (text.includes('мастерски владеешь')) {
       sendCommand('\\');
       console.log('Мастерство достигнуто. Очищаем буфер.');
-      state.isMasteryAchieved = true;
-      state.isStarPressed = false; // Сбрасываем флаг после завершения
-      state.isTraining = false; // Останавливаем тренировку
-      state.skillCount = 0; // Сбрасываем счетчик после завершения
-    } else if (state.skillCount >= state.maxSkillCount) {
+      training.isMasteryAchieved = true;
+      training.isStarPressed = false; // Сбрасываем флаг после завершения
+      training.isActive = false; // Останавливаем тренировку
+      training.skillCount = 0; // Сбрасываем счетчик после завершения
+    } else if (training.skillCount >= training.maxSkillCount) {
       sendCommand('\\'); // Очищаем буфер команд
       console.log(
         'Навык выполнен 99 раз. Очищаем буфер и выполняем команду "ум".'
       );
       sendCommand('ум'); // Выполняем команду "ум"
-      state.skillCount = 0; // Сбрасываем счетчик
+      training.skillCount = 0; // Сбрасываем счетчик
       console.log('Цикл возобновится автоматически.');
       setTimeout(() => {
-        sendCommand(state.skillToTrain); // Снова запускаем тренировку после команды "ум"
+        sendCommand(training.skillToTrain); // Снова запускаем тренировку после команды "ум"
         checkMasteryAndRepeat(''); // Возобновляем проверку
       }, 1000); // Небольшая задержка перед перезапуском цикла
-    } else if (!state.isEnergyLow && !state.isMasteryAchieved) {
-      sendCommand(state.skillToTrain);
-      state.skillCount++; // Увеличиваем счетчик после каждой команды
-      logDebug(`Текущий счетчик навыка: ${state.skillCount}`); // Выводим значение счетчика
+    } else if (!energy.isLow && !training.isMasteryAchieved) {
+      sendCommand(training.skillToTrain);
+      training.skillCount++; // Увеличиваем счетчик после каждой команды
+      logDebug(`Текущий счетчик навыка: ${training.skillCount}`); // Выводим значение счетчика
 
       // Устанавливаем флаг блокировки действия
-      state.isActionLocked = true;
+      general.isActionLocked = true;
       setTimeout(() => {
-        state.isActionLocked = false; // Разблокируем через 1 секунду
+        general.isActionLocked = false; // Разблокируем через 1 секунду
       }, 1000); // Задержка 1 секунда
     }
   };
@@ -139,16 +147,16 @@
   // Функция для поиска местоположения жертвы
   const findVictimLocation = text => {
     console.log(`text:`, text);
-    if (state.isVictimLocationFound) return; // Пропускаем, если местоположение уже найдено
+    if (hunting.isVictimLocationFound) return; // Пропускаем, если местоположение уже найдено
 
-    if (text.toLowerCase().includes(state.victim.toLowerCase())) {
-      const parts = text.toLowerCase().split(state.victim.toLowerCase());
+    if (text.toLowerCase().includes(hunting.victim.toLowerCase())) {
+      const parts = text.toLowerCase().split(hunting.victim.toLowerCase());
       if (parts.length > 1) {
         const location = parts[1].trim();
         console.log(`Местоположение жертвы: ${location}`);
-        state.victimLocation = location;
-        state.isVictimLocationFound = true;
-        sendCommand(`путь ${state.victimLocation}`);
+        hunting.victimLocation = location;
+        hunting.isVictimLocationFound = true;
+        sendCommand(`путь ${hunting.victimLocation}`);
       } else {
         console.log('Не удалось найти местоположение.');
       }
@@ -159,18 +167,18 @@
 
   // Функция для поиска кода местности
   const findLocationCode = text => {
-    if (!state.isVictimLocationFound || state.isLocationCodeFound) return;
+    if (!hunting.isVictimLocationFound || hunting.isLocationCodeFound) return;
 
     if (text && typeof text === 'string') {
-      const parts = text.toLowerCase().split(`'${state.victimLocation}':`);
+      const parts = text.toLowerCase().split(`'${hunting.victimLocation}':`);
       if (parts.length > 1) {
         const locationCode = parts[1].trim();
         if (locationCode) {
           console.log(`Код местности найден: ${locationCode}`);
           sendCommand(`бег ${locationCode}`);
 
-          state.isInspecting = true;
-          state.isLocationCodeFound = true;
+          hunting.isInspecting = true;
+          hunting.isLocationCodeFound = true;
           sendCommand('смотр');
         } else {
           console.log(
@@ -189,37 +197,39 @@
   const handleVictimEncounter = text => {
     console.log(`Получено сообщение:`, text);
 
-    if (text.toLowerCase().includes(`${state.victim.toLowerCase()} уже труп`)) {
-      console.log(`>>> Жертва ${state.victim} мертва! Останавливаем охоту.`);
-      state.isHunting = false;
-      state.isInspecting = false;
-      state.isVictimKilled = true;
-      state.isInCombat = false;
+    if (
+      text.toLowerCase().includes(`${hunting.victim.toLowerCase()} уже труп`)
+    ) {
+      console.log(`>>> Жертва ${hunting.victim} мертва! Останавливаем охоту.`);
+      hunting.isActive = false;
+      hunting.isInspecting = false;
+      hunting.isVictimKilled = true;
+      hunting.isInCombat = false;
       sendCommand('смотр');
-    } else if (text.toLowerCase().includes(state.victim.toLowerCase())) {
-      console.log(`>>> Жертва ${state.victim} тут!`);
+    } else if (text.toLowerCase().includes(hunting.victim.toLowerCase())) {
+      console.log(`>>> Жертва ${hunting.victim} тут!`);
       if (text.toLowerCase().includes('сбегает')) {
         console.log('>>> Жертва пытается сбежать, продолжаем преследование...');
-        sendCommand(`где ${state.victim}`);
+        sendCommand(`где ${hunting.victim}`);
       } else {
-        console.log(`>>> Атакую жертву: ${state.victim}`);
-        delayedSendCommand(`к вол ${state.victim}`, 1500);
-        state.isInspecting = false;
-        state.isInCombat = true;
+        console.log(`>>> Атакую жертву: ${hunting.victim}`);
+        delayedSendCommand(`к вол ${hunting.victim}`, 1500);
+        hunting.isInspecting = false;
+        hunting.isInCombat = true;
         setTimeout(() => {
           continueAttacking();
         }, 2000);
       }
     } else {
       console.log('>>> Жертва не найдена на текущей локации.');
-      state.isInspecting = false;
+      hunting.isInspecting = false;
     }
   };
 
   const continueAttacking = () => {
-    if (!state.isInCombat) return;
+    if (!hunting.isInCombat) return;
 
-    sendCommand(`к вол ${state.victim}`);
+    sendCommand(`к вол ${hunting.victim}`);
 
     setTimeout(() => {
       continueAttacking();
@@ -228,14 +238,14 @@
 
   const handleHuntingState = text => {
     // Если местоположение жертвы ещё не найдено, продолжаем его искать
-    if (!state.isVictimLocationFound) {
+    if (!hunting.isVictimLocationFound) {
       findVictimLocation(text); // Ищем местоположение жертвы
     }
 
     // Если местоположение найдено, но код местности ещё нет, продолжаем искать код
-    if (state.isVictimLocationFound && !state.isLocationCodeFound) {
+    if (hunting.isVictimLocationFound && !hunting.isLocationCodeFound) {
       if (
-        text.toLowerCase().includes(`'${state.victimLocation}':`) &&
+        text.toLowerCase().includes(`'${hunting.victimLocation}':`) &&
         !text.toLowerCase().includes('ты уже здесь')
       ) {
         findLocationCode(text); // Ищем код местности
@@ -244,11 +254,11 @@
 
     // Если мы находимся в нужной локации, но ещё не отправляли команду "смотр", ждем осмотра
     if (
-      state.isVictimLocationFound &&
-      state.isLocationCodeFound &&
-      state.isInspecting
+      hunting.isVictimLocationFound &&
+      hunting.isLocationCodeFound &&
+      hunting.isInspecting
     ) {
-      if (text.toLowerCase().includes(`${state.victim}`)) {
+      if (text.toLowerCase().includes(`${hunting.victim}`)) {
         console.log('>>> В локации жертвы, осматриваюсь.');
 
         handleVictimEncounter(text); // Обрабатываем текст после осмотра
@@ -259,7 +269,7 @@
   const handleTrainingState = text => {
     if (text.includes('У тебя не хватает энергии')) {
       handleLowEnergy(); // Вызываем правильную функцию триггера
-    } else if (state.isStarPressed && !state.isMasteryAchieved) {
+    } else if (training.isStarPressed && !training.isMasteryAchieved) {
       checkMasteryAndRepeat(text); // Проверяем, достигнуто ли мастерство
     }
   };
@@ -269,11 +279,11 @@
   $('.trigger').on('text.myNamespace', (e, text) => {
     // logDebug(`Полученный текст: ${text}`);
 
-    if (state.isHunting) {
+    if (hunting.isActive) {
       handleHuntingState(text);
     }
 
-    if (state.isTraining) {
+    if (training.isActive) {
       handleTrainingState(text);
     }
 
@@ -286,21 +296,21 @@
     }
 
     // Добавляем проверку состояния боя
-    if (state.isInCombat) {
+    if (hunting.isInCombat) {
       if (
-        text.toLowerCase().includes(`${state.victim.toLowerCase()} уже труп`)
+        text.toLowerCase().includes(`${hunting.victim.toLowerCase()} уже труп`)
       ) {
-        console.log(`>>> Жертва ${state.victim} мертва!`);
-        state.isInCombat = false; // Останавливаем атаку
+        console.log(`>>> Жертва ${hunting.victim} мертва!`);
+        hunting.isInCombat = false; // Останавливаем атаку
       } else if (text.toLowerCase().includes('ты не видишь здесь такого')) {
         console.log('>>> Жертва недоступна для атаки.');
-        state.isInCombat = false; // Останавливаем атаку
+        hunting.isInCombat = false; // Останавливаем атаку
       } else if (text.toLowerCase().includes('вы не можете сражаться')) {
         console.log('>>> Вы не можете продолжать бой.');
-        state.isInCombat = false; // Останавливаем атаку
+        hunting.isInCombat = false; // Останавливаем атаку
       } else if (text.toLowerCase().includes('вы умерли')) {
         console.log('>>> Вы погибли.');
-        state.isInCombat = false; // Останавливаем атаку
+        hunting.isInCombat = false; // Останавливаем атаку
       }
     }
   });
@@ -320,14 +330,14 @@
 
     commandHandled =
       command(e, '/victim', text, args => {
-        state.victim = args[1];
-        console.log(`>>> Твоя мишень теперь ${state.victim}\n`);
+        hunting.victim = args[1];
+        console.log(`>>> Твоя мишень теперь ${hunting.victim}\n`);
       }) || commandHandled;
 
     commandHandled =
       command(e, '/weapon', text, args => {
-        state.weapon = args[1];
-        console.log(`>>> Твое оружие теперь ${state.weapon}\n`);
+        general.weapon = args[1];
+        console.log(`>>> Твое оружие теперь ${general.weapon}\n`);
       }) || commandHandled;
 
     commandHandled =
@@ -346,11 +356,11 @@
 
     commandHandled =
       command(e, '/bd', text, args => {
-        state.doorToBash = args[1];
+        general.doorToBash = args[1];
         console.log(
-          `>>> Поехали, вышибаем по направлению ${state.doorToBash}\n`
+          `>>> Поехали, вышибаем по направлению ${general.doorToBash}\n`
         );
-        sendCommand(`выбить ${state.doorToBash}`);
+        sendCommand(`выбить ${general.doorToBash}`);
       }) || commandHandled;
 
     // Не возвращаем значение из обработчика события
@@ -365,7 +375,7 @@
   };
 
   const shoot = where => {
-    sendCommand(`к 'вол' ${where}.${state.victim}`);
+    sendCommand(`к 'вол' ${where}.${hunting.victim}`);
   };
 
   // Коды клавиш для цифровой клавиатуры
@@ -485,17 +495,17 @@
         sendCommand('к зв каб.гол');
         break;
       case KeyCodes.KP_PLUS: // Начать тренировку
-        state.isTraining = true; // Обучение запущено
-        state.isStarPressed = true; // Устанавливаем флаг нажатия *
-        state.isMasteryAchieved = false; // Сбрасываем флаг достижения мастерства
-        state.skillCount = 0; // Сбрасываем счетчик навыка
-        sendCommand(state.skillToTrain);
+        training.isActive = true; // Обучение запущено
+        training.isStarPressed = true; // Устанавливаем флаг нажатия *
+        training.isMasteryAchieved = false; // Сбрасываем флаг достижения мастерства
+        training.skillCount = 0; // Сбрасываем счетчик навыка
+        sendCommand(training.skillToTrain);
         checkMasteryAndRepeat(''); // Запускаем цикл
         break;
       case KeyCodes.KP_MINUS: // Остановить тренировку
-        state.isStarPressed = false; // Останавливаем цикл
-        state.isTraining = false; // Останавливаем тренировку
-        state.skillCount = 0; // Сбрасываем счетчик навыка
+        training.isStarPressed = false; // Останавливаем цикл
+        training.isActive = false; // Останавливаем тренировку
+        training.skillCount = 0; // Сбрасываем счетчик навыка
         console.log('Цикл остановлен при нажатии минуса');
         break;
       case 36: // Home
@@ -508,11 +518,11 @@
         sendCommand('к леч');
         break;
       case KeyCodes.KP_MUL: // Начать охоту
-        state.isHunting = true; // Охота запущена
-        state.isVictimLocationFound = false; // Сбрасываем флаг местоположения
-        state.isLocationCodeFound = false; // Сбрасываем флаг кода
-        state.isInspecting = false;
-        sendCommand(`где ${state.victim}`);
+        hunting.isActive = true; // Охота запущена
+        hunting.isVictimLocationFound = false; // Сбрасываем флаг местоположения
+        hunting.isLocationCodeFound = false; // Сбрасываем флаг кода
+        hunting.isInspecting = false;
+        sendCommand(`где ${hunting.victim}`);
         console.log('Отправлена команда "где victim".');
         break;
       default:
