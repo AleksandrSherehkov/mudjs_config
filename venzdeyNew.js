@@ -489,20 +489,18 @@
       case 192: // Tilda для баффов
         handleBuffs();
         break;
-      case 9: // Tab
-        sendCommand('приказ дем к гиг д');
-        sendCommand('приказ дем к ускор д');
-        sendCommand('приказ дем к зв д');
-        sendCommand('приказ дем к гиг 1.гол');
-        sendCommand('приказ дем к ускор 1.гол');
-        sendCommand('приказ дем к зв 1.гол');
-        sendCommand('приказ дем к гиг 2.гол');
-        sendCommand('приказ дем к ускор 2.гол');
-        sendCommand('приказ дем к зв 2.гол');
-        sendCommand('приказ дем к гиг 3.гол');
-        sendCommand('приказ дем к ускор 3.гол');
-        sendCommand('приказ дем к зв 3.гол');
+      case 9: {
+        // Tab
+        const commands = ['гиг', 'ускор', 'зв'];
+        const targets = ['д', '1.гол', '2.гол', '3.гол'];
+
+        targets.forEach(target => {
+          commands.forEach(command => {
+            sendCommand(`приказ дем к ${command} ${target}`);
+          });
+        });
         break;
+      }
       case KeyCodes.KP_PLUS: // Начать тренировку
         training.isActive = true; // Обучение запущено
         training.isStarPressed = true; // Устанавливаем флаг нажатия *
