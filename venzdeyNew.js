@@ -15,7 +15,9 @@
   const state = {
     hunting: {
       isActive: false, // Флаг для отслеживания процесса охоты
+      attackCommand: 'к вол',
       victim: 'проповедник',
+      lootItem: 'page',
       victimLocation: '', // Местоположение жертвы
       isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
       isLocationCodeFound: false, // Флаг, что код местности найден
@@ -26,7 +28,7 @@
     },
     training: {
       isActive: false, // Переменная для отслеживания процесса обучения
-      skillToTrain: 'к отпор зак',
+      skillToTrain: 'к отмен дем',
       skillCount: 0, // Счетчик выполнения навыка
       maxSkillCount: 98, // Максимальное количество повторений
       isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
@@ -213,7 +215,7 @@
         sendCommand(`где ${hunting.victim}`);
       } else {
         console.log(`>>> Атакую жертву: ${hunting.victim}`);
-        delayedSendCommand(`к вол ${hunting.victim}`, 1500);
+        delayedSendCommand(`${hunting.attackCommand} ${hunting.victim}`, 1500);
         hunting.isInspecting = false;
         hunting.isInCombat = true;
         setTimeout(() => {
@@ -229,7 +231,7 @@
   const continueAttacking = () => {
     if (!hunting.isInCombat) return;
 
-    sendCommand(`к вол ${hunting.victim}`);
+    sendCommand(`${hunting.attackCommand} ${hunting.victim}`);
 
     setTimeout(() => {
       continueAttacking();
@@ -301,6 +303,7 @@
         text.toLowerCase().includes(`${hunting.victim.toLowerCase()} уже труп`)
       ) {
         console.log(`>>> Жертва ${hunting.victim} мертва!`);
+        sendCommand(`взять ${hunting.lootItem}`);
         hunting.isInCombat = false; // Останавливаем атаку
       } else if (text.toLowerCase().includes('ты не видишь здесь такого')) {
         console.log('>>> Жертва недоступна для атаки.');
@@ -487,12 +490,18 @@
         handleBuffs();
         break;
       case 18: // Alt
-        sendCommand('к гиг д');
-        sendCommand('к ускор д');
-        sendCommand('к зв д');
-        sendCommand('к гиг каб');
-        sendCommand('к ускор каб');
-        sendCommand('к зв каб.гол');
+        sendCommand('приказ дем к гиг д');
+        sendCommand('приказ дем к ускор д');
+        sendCommand('приказ дем к зв д');
+        sendCommand('приказ дем к гиг 1.гол');
+        sendCommand('приказ дем к ускор 1.гол');
+        sendCommand('приказ дем к зв 1.гол');
+        sendCommand('приказ дем к гиг 2.гол');
+        sendCommand('приказ дем к ускор 2.гол');
+        sendCommand('приказ дем к зв 2.гол');
+        sendCommand('приказ дем к гиг 3.гол');
+        sendCommand('приказ дем к ускор 3.гол');
+        sendCommand('приказ дем к зв 3.гол');
         break;
       case KeyCodes.KP_PLUS: // Начать тренировку
         training.isActive = true; // Обучение запущено
