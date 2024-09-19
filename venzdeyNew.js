@@ -489,7 +489,7 @@
       case 192: // Tilda для баффов
         handleBuffs();
         break;
-      case 18: // Alt
+      case 9: // Tab
         sendCommand('приказ дем к гиг д');
         sendCommand('приказ дем к ускор д');
         sendCommand('приказ дем к зв д');
