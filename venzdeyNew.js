@@ -16,8 +16,8 @@
     hunting: {
       isActive: false, // Флаг для отслеживания процесса охоты
       attackCommand: 'к вол',
-      victim: 'проповедник',
-      lootItem: 'page',
+      victim: 'гарпия',
+      lootItem: 'string',
       victimLocation: '', // Местоположение жертвы
       isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
       isLocationCodeFound: false, // Флаг, что код местности найден
@@ -28,7 +28,7 @@
     },
     training: {
       isActive: false, // Переменная для отслеживания процесса обучения
-      skillToTrain: 'к отмен дем',
+      skillToTrain: 'к обнаружить невидимое',
       skillCount: 0, // Счетчик выполнения навыка
       maxSkillCount: 98, // Максимальное количество повторений
       isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
@@ -41,7 +41,7 @@
       meltCounter: 0, // Противодействие автовыкидыванию
       lastCast: '',
       doorToBash: 'n',
-      weapon: 'blue',
+      weapon: 'spindle',
       isActionLocked: false, // Для предотвращения спама действий
       isLooting: false, // Флаг для отслеживания процесса лутания
     },
@@ -411,30 +411,21 @@
   };
 
   const handleMovement = e => {
-    switch (e.which) {
-      case KeyCodes.KP_1:
-        dir('down', e);
-        break;
-      case KeyCodes.KP_2:
-        dir('south', e);
-        break;
-      case KeyCodes.KP_4:
-        dir('west', e);
-        break;
-      case KeyCodes.KP_5:
-        sendCommand('scan');
-        break;
-      case KeyCodes.KP_6:
-        dir('east', e);
-        break;
-      case KeyCodes.KP_8:
-        dir('north', e);
-        break;
-      case KeyCodes.KP_9:
-        dir('up', e);
-        break;
-      default:
-        return false;
+    const numpadDirectionMap = {
+      Numpad1: 'down',
+      Numpad2: 'south',
+      Numpad4: 'west',
+      Numpad6: 'east',
+      Numpad8: 'north',
+      Numpad9: 'up',
+    };
+
+    if (numpadDirectionMap[e.code]) {
+      dir(numpadDirectionMap[e.code], e);
+    } else if (e.code === 'Numpad5') {
+      sendCommand('scan');
+    } else {
+      return false;
     }
     return true;
   };
