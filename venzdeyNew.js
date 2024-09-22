@@ -16,8 +16,8 @@
     hunting: {
       isActive: false, // Флаг для отслеживания процесса охоты
       attackCommand: 'к цвет',
-      victim: 'журналист',
-      lootItem: 'photo',
+      victim: 'ханжа',
+      lootItem: 'doubt',
       victimLocation: '', // Местоположение жертвы
       isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
       isLocationCodeFound: false, // Флаг, что код местности найден
@@ -28,7 +28,7 @@
     },
     training: {
       isActive: false, // Переменная для отслеживания процесса обучения
-      skillToTrain: 'к брон',
+      skillToTrain: 'к обнар маг',
       skillCount: 0, // Счетчик выполнения навыка
       maxSkillCount: 98, // Максимальное количество повторений
       isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
@@ -432,6 +432,7 @@
 
   const buffs = [
     { prop: 'det', value: 'i', command: 'c detect invis' },
+    { prop: 'pro', value: 'i', command: 'c invisibility' },
     { prop: 'pro', value: 'S', command: 'c shield' },
     { prop: 'enh', value: 'l', command: 'c learning' },
     { prop: 'enh', value: 'g', command: 'c giant' },
