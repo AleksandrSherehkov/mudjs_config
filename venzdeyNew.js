@@ -15,9 +15,9 @@
   const state = {
     hunting: {
       isActive: false, // Флаг для отслеживания процесса охоты
-      attackCommand: 'к вол',
-      victim: 'гарпия',
-      lootItem: 'string',
+      attackCommand: 'к цвет',
+      victim: 'журналист',
+      lootItem: 'photo',
       victimLocation: '', // Местоположение жертвы
       isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
       isLocationCodeFound: false, // Флаг, что код местности найден
@@ -28,7 +28,7 @@
     },
     training: {
       isActive: false, // Переменная для отслеживания процесса обучения
-      skillToTrain: 'к обнаружить невидимое',
+      skillToTrain: 'к брон',
       skillCount: 0, // Счетчик выполнения навыка
       maxSkillCount: 98, // Максимальное количество повторений
       isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
@@ -378,7 +378,7 @@
   };
 
   const shoot = where => {
-    sendCommand(`к 'вол' ${where}.${hunting.victim}`);
+    sendCommand(`к ${hunting.attackCommand}  ${where}.${hunting.victim}`);
   };
 
   // Коды клавиш для цифровой клавиатуры
