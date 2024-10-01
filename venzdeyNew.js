@@ -15,9 +15,9 @@
   const state = {
     hunting: {
       isActive: false, // Флаг для отслеживания процесса охоты
-      attackCommand: 'к цвет',
-      victim: 'ханжа',
-      lootItem: 'doubt',
+      attackCommand: 'к вол стр',
+      victim: 'толстая бага',
+      lootItem: 'piece',
       victimLocation: '', // Местоположение жертвы
       isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
       isLocationCodeFound: false, // Флаг, что код местности найден
@@ -28,7 +28,7 @@
     },
     training: {
       isActive: false, // Переменная для отслеживания процесса обучения
-      skillToTrain: 'к обнар маг',
+      skillToTrain: 'к вед про дем',
       skillCount: 0, // Счетчик выполнения навыка
       maxSkillCount: 98, // Максимальное количество повторений
       isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
@@ -41,7 +41,7 @@
       meltCounter: 0, // Противодействие автовыкидыванию
       lastCast: '',
       doorToBash: 'n',
-      weapon: 'spindle',
+      weapon: 'garrote',
       isActionLocked: false, // Для предотвращения спама действий
       isLooting: false, // Флаг для отслеживания процесса лутания
     },
@@ -378,7 +378,7 @@
   };
 
   const shoot = where => {
-    sendCommand(`к ${hunting.attackCommand}  ${where}.${hunting.victim}`);
+    sendCommand(`${hunting.attackCommand}  ${where}.${hunting.victim}`);
   };
 
   // Коды клавиш для цифровой клавиатуры
@@ -432,7 +432,7 @@
 
   const buffs = [
     { prop: 'det', value: 'i', command: 'c detect invis' },
-    { prop: 'pro', value: 'i', command: 'c invisibility' },
+    { prop: 'trv', value: 'i', command: 'c invisibility' },
     { prop: 'pro', value: 'S', command: 'c shield' },
     { prop: 'enh', value: 'l', command: 'c learning' },
     { prop: 'enh', value: 'g', command: 'c giant' },
