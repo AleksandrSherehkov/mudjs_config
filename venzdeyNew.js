@@ -15,9 +15,9 @@
   const state = {
     hunting: {
       isActive: false, // Флаг для отслеживания процесса охоты
-      attackCommand: 'к вол стр',
-      victim: 'толстая бага',
-      lootItem: 'piece',
+      attackCommand: 'к вред',
+      victim: 'ханжа',
+      lootItem: 'doubt',
       victimLocation: '', // Местоположение жертвы
       isVictimLocationFound: false, // Флаг, что местоположение жертвы найдено
       isLocationCodeFound: false, // Флаг, что код местности найден
@@ -28,7 +28,7 @@
     },
     training: {
       isActive: false, // Переменная для отслеживания процесса обучения
-      skillToTrain: 'к вед про дем',
+      skillToTrain: 'к мент блок',
       skillCount: 0, // Счетчик выполнения навыка
       maxSkillCount: 98, // Максимальное количество повторений
       isMasteryAchieved: false, // Флаг для отслеживания достижения "мастерски владеешь"
@@ -41,7 +41,7 @@
       meltCounter: 0, // Противодействие автовыкидыванию
       lastCast: '',
       doorToBash: 'n',
-      weapon: 'garrote',
+      weapon: 'warhammer',
       isActionLocked: false, // Для предотвращения спама действий
       isLooting: false, // Флаг для отслеживания процесса лутания
     },
@@ -78,7 +78,7 @@
     },
     'Ты хочешь есть.': () => {
       console.log('>>> Сейчас бы шашлычка...\n');
-      sendCommand('колдов сотворить пищу |есть гриб');
+      sendCommand('колдов сотворить пищу |есть ман');
     },
     'Ты хочешь пить.': () => {
       console.log('>>> Сейчас бы вискарика...\n');
@@ -95,7 +95,7 @@
     training.isStarPressed = false; // Немедленно останавливаем цикл
     energy.isLow = true; // Устанавливаем флаг низкой энергии
     sendCommand('\\'); // Очищаем буфер команд
-    sendCommand('спать рай');
+    sendCommand('спать кресл');
 
     delayedSendCommand('вст', 25000); // Через 25 секунд встаем
 
@@ -431,8 +431,14 @@
   };
 
   const buffs = [
+    { prop: 'det', value: 'o', command: 'к диагностика' },
+    { prop: 'det', value: 'e', command: 'к обнаружить зло' },
+    { prop: 'det', value: 'g', command: 'к обнаружить добро' },
     { prop: 'det', value: 'i', command: 'c detect invis' },
     { prop: 'trv', value: 'i', command: 'c invisibility' },
+    { prop: 'pro', value: 's', command: 'к аура' },
+    { prop: 'enh', value: 'B', command: 'к благословение' },
+    { prop: 'trv', value: 'f', command: 'к полет' },
     { prop: 'pro', value: 'S', command: 'c shield' },
     { prop: 'enh', value: 'l', command: 'c learning' },
     { prop: 'enh', value: 'g', command: 'c giant' },
@@ -483,12 +489,15 @@
         break;
       case 9: {
         // Tab
-        const commands = ['гиг', 'ускор', 'зв'];
-        const targets = ['д', '1.гол', '2.гол', '3.гол'];
+        const commands = ['гиг', 'аура', 'неи', 'щит', 'брон', 'благ', 'обуч'];
+        const targets = ['д'];
+        // const commands = ['гиг', 'ускор', 'зв'];
+        // const targets = ['д', '1.гол', '2.гол', '3.гол'];
 
         targets.forEach(target => {
           commands.forEach(command => {
-            sendCommand(`приказ дем к ${command} ${target}`);
+            sendCommand(`к ${command} ${target}`);
+            // sendCommand(`приказ дем к ${command} ${target}`);
           });
         });
         break;
